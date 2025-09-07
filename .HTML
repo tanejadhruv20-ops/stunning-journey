@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ultra Search Engine — Pro (Game + Vault + Sign-In)</title>
+
+<!-- Google Identity (your client id) -->
+<meta name="google-signin-client_id" content="tanejadhruv20.apps.googleusercontent.com">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+  :root{
+    --accent:#f1c40f;
+    --accent2:#ff6f61;
+    --glass: rgba(255,255,255,0.85);
+    --glassDark: rgba(20,20,20,0.85);
+    --text:#111;
+    --bg:#ffffff;
+  }
+  body { margin:0; font-family: "Segoe UI", Roboto, system-ui, Arial; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;}
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 18px; position:sticky; top:0; z-index:40;
+    backdrop-filter: blur(8px);
+  }
+  .left {
+    display:flex; align-items:center; gap:14px;
+  }
+  .logo {
+    font-weight:800; font-size:22px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text; color:transparent;
+  }
+  .three-dot {
+    width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer; border:1px solid rgba(0,0,0,0.06);
+    background: linear-gradient(180deg,#fff,#f6f6f6);
+  }
+  .center {
+    display:flex; align-items:center; flex-direction:column; width:100%;
+  }
+  .search-wrap { margin-top:34px; display:flex; align-items:center; gap:12px; width:100%; justify-content:center; }
+  .search-box {
+    width:640px; max-width:92%;
+    display:flex; align-items:center; gap:8px;
+    padding:12px 16px; border-radius:999px; background:#f4f4f6; box-shadow:0 8px 24px rgba(16,24,40,0.06);
+    border:1px solid rgba(0,0,0,0.04);
+  }
+  .search-box input { border:none; outline:none; background:transparent; font-size:16px; flex:1; }
+  .search-btn { background:linear-gradient(90deg,var(--accent),var(--accent2)); color:white; border:none; padding:8px 14px; border-radius:999px; cursor:pointer; font-weight:600; }
+  #results { width:92%; max-width:1100px; margin:28px auto; display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:18px; }
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,250,0.9));
+    border-radius:12px; padding:14px; box-shadow: 0 8px 24px rgba(16,24,40,0.06);
+    display:flex; flex-direction:column; gap:8px; align-items:flex-start;
+  }
+  .card .top { display:flex; gap:10px; align-items:center; width:100%;}
+  .iconbox { width:48px;height:48px;border-radius:10px; display:flex;align-items:center;justify-content:center; background:linear-gradient(180deg,#fff,#eee); border:1px solid rgba(0,0,0,0.04);}
+  .card a { color:var(--accent); font-weight:700; font-size:16px; text-decoration:none; }
+  .card p { color:#444; margin:0; font-size:14px; }
+  .card .row { display:flex; width:100%; align-items:center; gap:8px; }
+  .star-btn { margin-left:auto; cursor:pointer; background:none; border:none; font-size:20px; }
+  .menu-panel {
+    position:absolute; right:14px; top:56px; width:320px; background:var(--glass); border-radius:12px; padding:12px;
+    box-shadow:0 12px 40px rgba(10,20,40,0.12); display:none; z-index:200;
+  }
+  .menu-panel h3 { margin:8px 0 6px; font-size:16px; color:#222;}
+  .menu-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 6px; border-radius:8px; }
+  .menu-row:hover { background:rgba(0,0,0,0.03); }
+  .fav-list { max-height:160px; overflow:auto; padding:6px; display:flex; flex-direction:column; gap:6px; }
+  .vault {
+    margin-top:8px;
+    padding:10px; border-radius:8px; background:linear-gradient(180deg,#fff,#fafafa); border:1px solid rgba(0,0,0,0.04);
+  }
+  .vault input, .vault button { padding:8px; font-size:14px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); }
+  .vault-actions { display:flex; gap:8px; margin-top:8px; }
+  .bottom-row { width:100%; display:flex; gap:18px; padding:24px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .left-col { width:640px; max-width:92%; }
+  .right-col { width:360px; max-width:92%; }
+  #gameCanvas { width:100%; height:360px; border-radius:12px; display:block; background:linear-gradient(#dbe9ff,#fff); border:1px solid rgba(0,0,0,0.06); }
+  .game-controls { margin-top:12px; display:flex; gap:8px; align-items:center; }
+  .btn { padding:10px 14px; border-radius:10px; border:none; cursor:pointer; background:var(--accent); color:white; font-weight:700; }
+  .chat {
+    border-radius:12px; padding:14px; background:linear-gradient(#fff,#fafafa); box-shadow:0 8px 24px rgba(16,24,40,0.06);
+  }
+  .chat-messages { height:240px; overflow:auto; background:transparent; padding:6px; display:flex; flex-direction:column; gap:8px; }
+  .chat-input { display:flex; gap:8px; margin-top:8px; }
+  .chat-input input { flex:1; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); }
+  .muted { color:#666; font-size:13px; }
+  a.small { color:#444; text-decoration:underline; font-size:13px; }
+  @media (max-width:920px){
+    .bottom-row { flex-direction:column; align-items:center; }
+    .right-col{ width:92%; }
+    .left-col{ width:92%; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="left">
+    <div class="logo">⚡ Ultra Search Engine</div>
+    <div class="muted" style="font-size:13px;">— apps, AI, games & vault</div>
+  </div>
+  <div style="position:relative;">
+    <div id="threeDot" class="three-dot" title="Menu (ID, Favorites & Vault)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="2.5" fill="#333"/><circle cx="12" cy="12" r="2.5" fill="#333"/><circle cx="19" cy="12" r="2.5" fill="#333"/></svg>
+    </div>
+    <div id="menuPanel" class="menu-panel" aria-hidden="true">
+      <div id="menuContent">
+        <h3>Account</h3>
+        <div id="accountRow" class="menu-row">
+          <div>
+            <div id="accName" style="font-weight:700">Not signed in</div>
+            <div id="accEmail" class="muted">No account</div>
+          </div>
+          <div id="accPic" style="width:44px; height:44px; border-radius:8px; background:#eee;"></div>
+        </div>
+        <h3 style="margin-top:10px;">Favorites</h3>
+        <div class="fav-list" id="menuFavs">
+          <div class="muted">No favorites yet</div>
+        </div>
+        <h3 style="margin-top:10px;">Password Vault</h3>
+        <div class="vault">
+          <div class="muted">Unlock vault to view saved passwords</div>
+          <div style="margin-top:8px;">
+            <input id="vaultPass" type="password" placeholder="Master password (create if new)" style="width:100%" />
+            <div class="vault-actions">
+              <button id="unlockBtn" class="btn" onclick="unlockVault()">Unlock / Create</button>
+              <button id="lockBtn" class="btn" style="background:#888" onclick="lockVault()">Lock</button>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+              <input id="newCredName" placeholder="Site / App" style="flex:1"/>
+              <input id="newCredUser" placeholder="Username" style="flex:1"/>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+              <input id="newCredPass" placeholder="Password" style="flex:1"/>
+              <button class="btn" onclick="saveCredential()">Save</button>
+            </div>
+            <div id="vaultList" style="margin-top:10px; max-height:150px; overflow:auto;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<main class="center">
+  <div class="search-wrap">
+    <div class="search-box">
+      <input id="searchInput" placeholder="Search apps, games, AI..." onkeyup="liveSearch()" />
+      <button class="search-btn" onclick="doSearch()">Search</button>
+    </div>
+  </div>
+  <div id="results" aria-live="polite"></div>
+  <div class="bottom-row">
+    <div class="left-col">
+      <div style="display:flex; gap:12px; align-items:center;">
+        <h3 style="margin:0">Offline Runner — Man vs Cactus</h3>
+        <div class="muted">Press <b>Space</b> to jump</div>
+      </div>
+      <canvas id="gameCanvas"></canvas>
+      <div class="game-controls">
+        <button id="startGame" class="btn" onclick="startRunner()">Start / Restart</button>
+        <div id="scoreDisplay" class="muted">Score: 0</div>
+      </div>
+    </div>
+    <div class="right-col">
+      <div class="chat">
+        <h4 style="margin:0 0 8px 0">AI Chat (local simulator)</h4>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+          <input id="chatInput" placeholder="Ask something..." onkeydown="if(event.key==='Enter'){sendChat();}" />
+          <button class="btn" onclick="sendChat()">Send</button>
+        </div>
+        <div style="margin-top:8px;" class="muted">Tip: This is a local simulated assistant. You can wire this to real APIs later.</div>
+      </div>
+    </div>
+  </div>
+</main>
+<!-- Google Sign-In placeholder (hidden on-page element, required by library) -->
+<div id="g_id_onload"
+     data-client_id="tanejadhruv20.apps.googleusercontent.com"
+     data-callback="handleGSI"
+     data-auto_prompt="false" style="display:none;"></div>
+<div class="g_id_signin" data-type="standard" style="display:none;"></div>
+<script>
+/* ==========================
+   App & Game Database
+   ========================== */
+const DB = {
+  "YouTube": {desc:"Watch videos, music & more", link:"https://www.youtube.com"},
+  "Roblox": {desc:"Play & create games", link:"https://www.roblox.com"},
+  "Free Fire": {desc:"Mobile Battle Royale", link:"https://ff.garena.com/en/download"},
+  "Call of Duty Mobile": {desc:"COD on mobile", link:"https://www.callofduty.com/mobile"},
+  "Clash of Clans": {desc:"Build, battle & conquer", link:"https://supercell.com/en/games/clashofclans/"},
+  "ChatGPT": {desc:"OpenAI assistant", link:"https://chat.openai.com/"},
+  "Gemini": {desc:"Google Gemini AI", link:"https://gemini.google.com/"},
+  "Perplexity": {desc:"AI search", link:"https://www.perplexity.ai"},
+  "Steam": {desc:"PC game store", link:"https://store.steampowered.com/"},
+  "Snapchat": {desc:"Snap & chat", link:"https://www.snapchat.com/download"},
+  "Minecraft": {desc:"Sandbox block game", link:"https://www.minecraft.net/"}
+};
+/* ==========================
+   UI: Search & Results
+   ========================== */
+const resultsEl = document.getElementById('results');
+function renderResults(list) {
+  resultsEl.innerHTML = '';
+  if(list.length===0){
+    resultsEl.innerHTML = `<div style="padding:28px;color:#666;">No results</div>`;
+    return;
+  }
+  list.forEach(name => {
+    const card = document.createElement('div'); card.className='card';
+    const top = document.createElement('div'); top.className='top';
+    const icon = document.createElement('div'); icon.className='iconbox';
+    icon.innerHTML = renderIconSVG(name);
+    const info = document.createElement('div'); info.style.flex='1';
+    const a = document.createElement('a'); a.href = DB[name].link; a.target='_blank'; a.innerText = name;
+    const p = document.createElement('p'); p.innerText = DB[name].desc;
+    info.appendChild(a); info.appendChild(p);
+    const row = document.createElement('div'); row.className='row';
+    const star = document.createElement('button'); star.className='star-btn'; star.innerHTML='☆';
+    if(isFavorited(name)) star.classList.add('favorited');
+    star.onclick = () => toggleFavorite(name, star);
+    row.appendChild(icon); row.appendChild(info); row.appendChild(star);
+    card.appendChild(row);
+    resultsEl.appendChild(card);
+  });
+}
+function renderIconSVG(name){
+  const color = stringToColor(name);
+  return `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="24" height="24" rx="5" fill="${color}"/>
+    <text x="12" y="16" font-size="10" font-weight="700" text-anchor="middle" fill="#fff" font-family="sans-serif">${name[0]||'A'}</text>
+  </svg>`;
+}
+function stringToColor(s){
+  let h = 0; for(let i=0;i<s.length;i++){ h = (h<<5) - h + s.charCodeAt(i); h |= 0; }
+  const hue = Math.abs(h) % 360;
+  return `hsl(${hue} 70% 46%)`;
+}
+function liveSearch(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if(!q){ renderResults(Object.keys(DB).slice(0,8)); return; }
+  const matches = Object.keys(DB).filter(k=> k.toLowerCase().includes(q) || DB[k].desc.toLowerCase().includes(q));
+  renderResults(matches);
+}
+function doSearch(){ liveSearch(); }
+/* ==========================
+   Favorites (per-user)
+   ========================== */
+let user = null; // {name,email,picture}
+function getStorageKey(){ return user ? `ultra_favs_${user.email}` : 'ultra_favs_guest'; }
+function loadFavorites(){
+  try{
+    const raw = localStorage.getItem(getStorageKey());
+    return raw ? JSON.parse(raw) : [];
+  }catch{ return []; }
+}
+function saveFavorites(arr){
+  localStorage.setItem(getStorageKey(), JSON.stringify(arr));
+}
+function isFavorited(name){
+  return loadFavorites().includes(name);
+}
+function toggleFavorite(name, btn){
+  let favs = loadFavorites();
+  if(favs.includes(name)) {
+    favs = favs.filter(x=>x!==name);
+    btn && btn.classList.remove('favorited');
+    btn && (btn.innerText='☆');
+  } else {
+    favs.push(name);
+    btn && btn.classList.add('favorited');
+    btn && (btn.innerText='★');
+  }
+  saveFavorites(favs);
+  updateMenuFavs();
+  renderFavList();
+}
+function updateMenuFavs(){
+  const el = document.getElementById('menuFavs');
+  el.innerHTML = '';
+  const favs = loadFavorites();
+  if(favs.length===0){ el.innerHTML = '<div class="muted">No favorites</div>'; return; }
+  favs.forEach(n=>{
+    const row = document.createElement('div'); row.className='menu-row';
+    row.innerHTML = `<div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:6px;background:${stringToColor(n)}"></div>
+      <div>${n}</div>
+    </div><div><a class="small" href="${DB[n]?.link||'#'}" target="_blank">Open</a></div>`;
+    el.appendChild(row);
+  });
+}
+function renderFavList(){
+  const favEl = document.getElementById('favList');
+  favEl.innerHTML = '';
+  const favs = loadFavorites();
+  if(favs.length===0){ favEl.innerHTML = '<div class="muted">No favorites yet</div>'; return; }
+  favs.forEach(n=>{
+    const it = document.createElement('div'); it.className='fav-item';
+    it.innerHTML = `<div style="width:28px;height:28px;border-radius:6px;background:${stringToColor(n)}"></div>
+      <a href="${DB[n]?.link||'#'}" target="_blank">${n}</a>`;
+    favEl.appendChild(it);
+  });
+}
+/* ==========================
+   Three-dot menu toggle
+   ========================== */
+const threeDot = document.getElementById('threeDot');
+const menuPanel = document.getElementById('menuPanel');
+threeDot.addEventListener('click', (e)=>{
+  menuPanel.style.display = (menuPanel.style.display==='block') ? 'none' : 'block';
+  updateMenuFavs();
+});
+document.addEventListener('click', (e)=>{
+  if(!threeDot.contains(e.target) && !menuPanel.contains(e.target)) menuPanel.style.display='none';
+});
+/* ==========================
+   Password Vault (client-side encrypted)
+   ========================== */
+const V_KEY_PREFIX = 'ultra_vault_';
+function vaultStorageKey(){ return V_KEY_PREFIX + (user ? user.email : 'guest'); }
+async function deriveKeyFromPassword(password, saltHex){
+  const enc = new TextEncoder();
+  const salt = saltHex ? hexToBytes(saltHex) : crypto.getRandomValues(new Uint8Array(16));
+  const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt, iterations: 150000, hash:'SHA-256' },
+    baseKey,
+    { name:'AES-GCM', length:256 },
+    false,
+    ['encrypt','decrypt']
+  );
+  return { key, salt: bytesToHex(salt) };
+}
+async function encryptData(key, obj){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const ciphertext = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, enc.encode(JSON.stringify(obj)));
+  return { iv: bytesToHex(iv), data: arrayBufferToBase64(ciphertext) };
+}
+async function decryptData(key, ivHex, dataB64){
+  const iv = hexToBytes(ivHex);
+  const ct = base64ToArrayBuffer(dataB64);
+  const dec = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct);
+  return JSON.parse(new TextDecoder().decode(dec));
+}
+function bytesToHex(bytes){ return Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+function hexToBytes(hex){ const bytes=new Uint8Array(hex.length/2); for(let i=0;i<bytes.length;i++) bytes[i]=parseInt(hex.substr(i*2,2),16); return bytes; }
+function arrayBufferToBase64(buf){ const bytes = new Uint8Array(buf); let binary=''; for(let b of bytes) binary+=String.fromCharCode(b); return btoa(binary); }
+function base64ToArrayBuffer(b64){ const binary = atob(b64); const len = binary.length; const bytes = new Uint8Array(len); for(let i=0;i<len;i++) bytes[i]=binary.charCodeAt(i); return bytes.buffer; }
+let vaultUnlocked = false;
+let vaultKey = null;
+let vaultSalt = null;
+async function unlockVault(){
+  const pass = document.getElementById('vaultPass').value;
+  if(!pass){ alert('Enter a master password'); return; }
+  const sk = vaultStorageKey();
+  const raw = localStorage.getItem(sk);
+  if(!raw){
+    const { key, salt } = await deriveKeyFromPassword(pass, null);
+    vaultKey = key; vaultSalt = salt; vaultUnlocked=true;
+    const encObj = await encryptData(vaultKey, []);
+    localStorage.setItem(sk, JSON.stringify({ salt: vaultSalt, iv: encObj.iv, data: encObj.data }));
+    alert('Vault created and unlocked');
+    renderVaultList([]);
+    return;
+  }
+  try{
+    const obj = JSON.parse(raw);
+    const { key } = await deriveKeyFromPassword(pass, obj.salt);
+    const creds = await decryptData(key, obj.iv, obj.data);
+    vaultKey = key; vaultSalt = obj.salt; vaultUnlocked=true;
+    renderVaultList(creds);
+    alert('Vault unlocked');
+  }catch(e){
+    console.error(e);
+    alert('Failed to unlock vault — wrong master password or corrupted data.');
+  }
+}
+function lockVault(){
+  vaultUnlocked=false; vaultKey=null; vaultSalt=null; document.getElementById('vaultList').innerHTML=''; alert('Vault locked');
+}
+async function saveCredential(){
+  if(!vaultUnlocked){ alert('Unlock vault first'); return; }
+  const name = document.getElementById('newCredName').value.trim();
+  const usern = document.getElementById('newCredUser').value.trim();
+  const pass = document.getElementById('newCredPass').value.trim();
+  if(!name||!usern||!pass){ alert('Fill all fields'); return; }
+  const sk = vaultStorageKey();
+  const raw = JSON.parse(localStorage.getItem(sk));
+  const creds = await decryptData(vaultKey, raw.iv, raw.data);
+  creds.push({ name, user:usern, pass, created:Date.now() });
+  const enc = await encryptData(vaultKey, creds);
+  localStorage.setItem(sk, JSON.stringify({ salt: vaultSalt, iv: enc.iv, data: enc.data }));
+  renderVaultList(creds);
+  document.getElementById('newCredName').value=''; document.getElementById('newCredUser').value=''; document.getElementById('newCredPass').value='';
+}
+function renderVaultList(creds){
+  const el = document.getElementById('vaultList'); el.innerHTML='';
+  if(!creds || creds.length===0){ el.innerHTML='<div class="muted">No saved credentials</div>'; return; }
+  creds.forEach((c, idx)=>{
+    const d = document.createElement('div'); d.style.display='flex'; d.style.justifyContent='space-between'; d.style.padding='6px'; d.style.borderBottom='1px solid rgba(0,0,0,0.04)';
+    const left = document.createElement('div'); left.innerHTML=`<div style="font-weight:700">${c.name}</div><div class="muted" style="font-size:12px">${c.user}</div>`;
+    const right = document.createElement('div');
+    const showBtn = document.createElement('button'); showBtn.className='btn'; showBtn.style.background='#444'; showBtn.style.padding='6px 10px'; showBtn.innerText='Show';
+    showBtn.onclick = () => { alert(`Credentials for ${c.name}\nUser: ${c.user}\nPassword: ${c.pass}`); };
+    right.appendChild(showBtn);
+    d.appendChild(left); d.appendChild(right); el.appendChild(d);
+  });
+}
+/* ==========================
+   Google Sign-In handling (GSI)
+   ========================== */
+function handleGSI(response){
+  try{
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    user = { name:payload.name, email:payload.email, picture:payload.picture };
+    document.getElementById('accName').innerText = user.name;
+    document.getElementById('accEmail').innerText = user.email;
+    const pic = document.getElementById('accPic'); pic.style.backgroundImage = `url(${user.picture})`; pic.style.backgroundSize='cover';
+    document.getElementById('accPic').title = user.name;
+    document.getElementById('menuPanel').style.display='block';
+    document.getElementById('vaultPass').placeholder = 'Master password for ' + (user.email || 'account');
+    updateMenuFavs(); renderFavList();
+    localStorage.setItem('ultra_profile', JSON.stringify(user));
+  }catch(e){ console.error('GSI error',e); alert('Sign-in failed'); }
+}
+/* ==========================
+   AI chat simulator
+   ========================== */
+function appendChat(who, text){
+  const el = document.getElementById('chatMessages');
+  const node = document.createElement('div'); node.innerHTML = `<div style="font-weight:700">${who}</div><div>${text}</div>`; el.appendChild(node); el.scrollTop = el.scrollHeight;
+}
+function sendChat(){
+  const txt = document.getElementById('chatInput').value.trim(); if(!txt) return;
+  appendChat('You', txt);
+  document.getElementById('chatInput').value='';
+  appendChat('AI', '⏳ thinking...');
+  setTimeout(()=>{
+    const reply = `I can help with \"${txt}\". (This is a simulated reply — connect a real AI API for live responses.)`;
+    const msgs = document.getElementById('chatMessages');
+    msgs.removeChild(msgs.lastChild);
+    appendChat('AI', reply);
+  }, 800 + Math.random()*900);
+}
+/* ==========================
+   Runner Game (canvas) with basic sprite animation
+   ========================== */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let W = canvas.clientWidth, H = 360; canvas.width = W; canvas.height = H;
+window.addEventListener('resize', ()=>{ W = canvas.clientWidth; canvas.width = W; canvas.height = H; });
+let running = false, score=0, speed=6, obstacles = [], lastSpawn=0, frame=0;
+let player = { x:80, y: H-80, w:40, h:56, vy:0, onGround:true, animFrame:0, animTick:0 };
+function startRunner(){
+  running = true; score=0; speed=6; obstacles=[]; lastSpawn=0; player.y = H-80; player.vy=0; player.onGround=true;
+  document.getElementById('scoreDisplay').innerText = 'Score: 0';
+  requestAnimationFrame(gameLoop);
+}
+function endRunner(){
+  running=false;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = 'white'; ctx.font='28px Arial';
+  ctx.fillText('Game Over — Press Start to replay', W*0.18, H*0.5);
+}
+function spawnObstacle(){
+  const size = 28 + Math.random()*28;
+  obstacles.push({ x: W + 20, y: H - 60, w: size, h: size + 10, speed: speed });
+}
+function jump(){
+  if(player.onGround){ player.vy = -14; player.onGround=false; }
+}
+document.addEventListener('keydown', e=>{ if(e.code==='Space') { e.preventDefault(); jump(); } });
+function gameLoop(ts){
+  if(!running) return;
+  frame++;
+  if(performance.now() - lastSpawn > 1000 + Math.random()*1200){
+    spawnObstacle(); lastSpawn = performance.now();
+  }
+  player.y += player.vy; player.vy += 0.8;
+  if(player.y >= H-80){ player.y = H-80; player.vy = 0; player.onGround = true; }
+  player.animTick++; if(player.animTick % 6 === 0){ player.animFrame = (player.animFrame + 1) % 4; }
+  for(let i=obstacles.length-1;i>=0;i--){
+    obstacles[i].x -= speed;
+    if( rectIntersect(player.x, player.y, player.w, player.h, obstacles[i].x, obstacles[i].y - obstacles[i].h, obstacles[i].w, obstacles[i].h) ){
+      endRunner(); return;
+    }
+    if(obstacles[i].x + obstacles[i].w < 0) { obstacles.splice(i,1); score++; if(score % 6 === 0) speed += 0.8; document.getElementById('scoreDisplay').innerText = 'Score: '+score; }
+  }
+  ctx.clearRect(0,0,W,H);
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#dbe9ff'); g.addColorStop(1,'#fff');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  drawGround();
+  obstacles.forEach(o=> drawCactus(o));
+  drawPlayerSprite(player.x, player.y, player.w, player.h, player.animFrame);
+  requestAnimationFrame(gameLoop);
+}
+function rectIntersect(x1,y1,w1,h1,x2,y2,w2,h2){
+  return !(x2 > x1 + w1 || x2 + w2 < x1 || y2 > y1 + h1 || y2 + h2 < y1);
+}
+function drawGround(){
+  const gh = 80;
+  ctx.fillStyle = '#7a6f55'; ctx.fillRect(0,H-gh,W,gh);
+  ctx.fillStyle = '#6b5d46';
+  for(let i=0;i<W;i+=18){
+    ctx.fillRect(i + (i%36===0?4:0), H-gh + (i%30), 6, 4);
+  }
+  ctx.fillStyle = '#86b04b';
+  ctx.fillRect(0,H-gh-6,W,6);
+}
+function drawCactus(o){
+  const x = o.x; const y = o.y - o.h;
+  ctx.save();
+  const grd = ctx.createLinearGradient(x,y,x,y+o.h);
+  grd.addColorStop(0,'#2e7d32'); grd.addColorStop(1,'#1b5e20');
+  ctx.fillStyle = grd;
+  ctx.fillRect(x, y, o.w, o.h);
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  for(let i=0;i<6;i++){
+    ctx.beginPath(); ctx.moveTo(x+2, y + i*(o.h/6)+4); ctx.lineTo(x+o.w-3, y + i*(o.h/6)); ctx.stroke();
+  }
+  ctx.fillRect(x - o.w*0.45, y + o.h*0.35, o.w*0.5, o.h*0.25);
+  ctx.fillRect(x + o.w*0.9, y + o.h*0.55, o.w*0.5, o.h*0.22);
+  ctx.restore();
+}
+function drawPlayerSprite(px, py, w, h, frameIdx){
+  ctx.save();
+  ctx.translate(px + w/2, py + h/2);
+  ctx.fillStyle = '#00000020';
+  ctx.fillRect(-w/2+2, -h/2+8, w, h);
+  ctx.fillStyle = '#29487d';
+  ctx.fillRect(-w/6, -h/2 + 8, w/3, h*0.45);
+  ctx.beginPath(); ctx.fillStyle='#ffd9b3'; ctx.arc(0, -h/2 + 6, w*0.22, 0, Math.PI*2); ctx.fill();
+  let armAngle = (frameIdx%2===0) ? -0.8 : -0.3;
+  drawLimb(-w/6, -h/2 + 12, armAngle, w*0.25, '#29487d');
+  drawLimb(w/6, -h/2 + 12, -armAngle, w*0.25, '#29487d');
+  const legs = [
+    {a1:0.5, a2:-0.6},
+    {a1:0.2, a2:-0.2},
+    {a1:-0.3, a2:0.6},
+    {a1:-0.1, a2:0.1}
+  ];
+  const lf = legs[frameIdx % legs.length];
+  drawLimb(-w*0.12, h*0.05, lf.a1, w*0.35, '#2a2a2a');
+  drawLimb(w*0.12, h*0.05, lf.a2, w*0.35, '#2a2a2a');
+  ctx.restore();
+}
+function drawLimb(x,y,angle,len,color){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle);
+  ctx.fillStyle=color;
+  ctx.fillRect(0,0,len*0.4,len*0.12);
+  ctx.restore();
+}
+/* ==========================
+   Initialization
+   ========================== */
+(function init(){
+  renderResults(Object.keys(DB).slice(0,8));
+  renderFavList();
+  updateMenuFavs();
+  document.getElementById('startGame').addEventListener('click', startRunner);
+  const p = localStorage.getItem('ultra_profile');
+  if(p){ try{ const pp = JSON.parse(p); user = pp; document.getElementById('accName').innerText = user.name; document.getElementById('accEmail').innerText = user.email; document.getElementById('accPic').style.backgroundImage = `url(${user.picture})`; renderFavList(); updateMenuFavs(); }catch(e){} }
+})();
+</script>
+</body>
+</html>
